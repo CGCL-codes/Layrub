@@ -50,6 +50,16 @@ class BatchNormLayer : public Layer<Dtype> {
   virtual inline int ExactNumBottomBlobs() const { return 1; }
   virtual inline int ExactNumTopBlobs() const { return 1; }
 
+  void TransferDataToCPU(const cudaStream_t& stream, int count);
+  void TransferDataToGPU(const cudaStream_t& stream, int count);
+  Blob<Dtype>& temp_Blob();
+  Blob<Dtype>& x_norm_Blob();
+  Blob<Dtype>& mean_Blob();
+  Blob<Dtype>& variance_Blob();
+  Blob<Dtype>& batch_sum_multiplier_Blob();
+  Blob<Dtype>& num_by_chans_Blob();
+  Blob<Dtype>& spatial_sum_multiplier_Blob();
+
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);

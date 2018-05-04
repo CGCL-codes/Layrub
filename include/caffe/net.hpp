@@ -252,6 +252,21 @@ class Net {
     after_backward_.push_back(value);
   }
 
+  const vector<Blob<Dtype>*>& Forward(const cudaStream_t& stream, Dtype* loss = NULL);
+  Dtype ForwardFromTo(int start, int end, const cudaStream_t& stream);
+  void Backward(const cudaStream_t& stream);
+  void BackwardFromTo(int start, int end, const cudaStream_t& stream);
+  Dtype ForwardBackward(const cudaStream_t& stream) {
+  	Dtype loss;
+        for(int i = 0; i < blobs_.size(); ++i){
+            if(*(blobs_[i]->ref()) == -1 || *(blobs_[i]->ref()) == 0)
+		blobs_[i]->assign_ref(blobs_ref_[i]);
+        }
+  	Forward(stream, &loss);
+  	Backward(stream);
+  	return loss;
+  }
+
  protected:
   // Helpers for Init.
   /// @brief Append a new top blob to the net.
@@ -335,6 +350,46 @@ class Net {
   vector<Callback*> after_forward_;
   vector<Callback*> before_backward_;
   vector<Callback*> after_backward_;
+
+  private:
+    set<int> loss_layer_ids_;
+    set<int> inplace_layer_ids_;
+    set<int> the_rest_layer_ids_;
+    map<int, int> blobId_layerId_;
+    int char_relu_count_;
+    set<int> relu_layer_ids_;
+    vector<int> blobs_ref_;// keep intermediate blobs reference
+    map<shared_ptr<SyncedMemory>, int> allocated_syncedmem_;// used for debug
+    vector<int> split_layer_ids_;
+
+    class MemoryBlock_{
+    private:
+      	shared_ptr<SyncedMemory> mem_ptr;
+      	int* ref;
+    public:
+      	MemoryBlock_(size_t size, int* r): mem_ptr(new SyncedMemory(size)){
+      		ref = r;
+      	}
+      	shared_ptr<SyncedMemory> getMemptr() const{
+      		return mem_ptr;
+      	}
+      	int* getRefptr() const{
+      		return ref;
+      	}
+      	int getRef() const{
+      		return *ref;
+      	}
+      	void setRef(int* r){
+      		ref = r;
+      	}
+    };
+    void intralayer(const NetParameter &param);
+    void interlayer(const NetParameter &param);
+    int getMemoryBlock(Blob<Dtype>* top_blob, vector<MemoryBlock_>& memory_blocks);
+
+    size_t get_intermediate_data_size() const;
+    set<shared_ptr<Blob<Dtype> > > data_layer_blobs_;
+    set<shared_ptr<Blob<Dtype> > > split_layer_blobs_;
 
 DISABLE_COPY_AND_ASSIGN(Net);
 };

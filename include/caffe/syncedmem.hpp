@@ -69,6 +69,10 @@ class SyncedMemory {
   SyncedHead head() { return head_; }
   size_t size() { return size_; }
 
+  void resize(const size_t size);
+  void* transfer_to_cpu(const cudaStream_t& stream,const size_t size, void* cpu_ptr);
+  void transfer_to_gpu(const cudaStream_t& stream,const size_t size, const void* cpu_ptr);
+
 #ifndef CPU_ONLY
   void async_gpu_push(const cudaStream_t& stream);
 #endif

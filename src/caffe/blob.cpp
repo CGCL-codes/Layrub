@@ -63,14 +63,14 @@ template <typename Dtype>
 Blob<Dtype>::Blob(const int num, const int channels, const int height,
     const int width)
   // capacity_ must be initialized before calling Reshape
-  : capacity_(0) {
+  : capacity_(0), data_cpu_ptr_(NULL), reference_ (new int(0)) {
   Reshape(num, channels, height, width);
 }
 
 template <typename Dtype>
 Blob<Dtype>::Blob(const vector<int>& shape)
   // capacity_ must be initialized before calling Reshape
-  : capacity_(0) {
+  : capacity_(0), data_cpu_ptr_(NULL), reference_ (new int(0)) {
   Reshape(shape);
 }
 
@@ -156,6 +156,7 @@ template <typename Dtype>
 void Blob<Dtype>::ShareData(const Blob& other) {
   CHECK_EQ(count_, other.count());
   data_ = other.data();
+  reference_ = other.ref();
 }
 
 template <typename Dtype>
@@ -551,6 +552,45 @@ void Blob<float>::ToProto(BlobProto* proto, bool write_diff) const {
       proto->add_diff(diff_vec[i]);
     }
   }
+}
+
+template<typename Dtype>
+void Blob<Dtype>::SetDiffTo(shared_ptr<SyncedMemory> shared) {
+	diff_ = shared;
+}
+
+template<typename Dtype>
+void Blob<Dtype>::SetDataTo(shared_ptr<SyncedMemory> shared) {
+	data_ = shared;
+//	LOG(INFO)<<"data_ in SetDataTo(): "<<data_;
+}
+
+template<typename Dtype>
+void Blob<Dtype>::Offload(const cudaStream_t& stream) {
+	CHECK(data_);
+//	CHECK(!data_cpu_ptr_);
+	data_cpu_ptr_ = data_->transfer_to_cpu(stream, sizeof(Dtype) * count(),
+			data_cpu_ptr_);
+//	LOG(INFO)<<"data_cpu_ptr: "<<data_cpu_ptr_;
+}
+
+template<typename Dtype>
+void Blob<Dtype>::Loadin(const cudaStream_t& stream) {
+	CHECK(data_);
+	if(data_cpu_ptr_){
+		data_->transfer_to_gpu(stream, sizeof(Dtype) * count(), data_cpu_ptr_);
+//		LOG(INFO)<<"data cpu_ptr: "<<data_cpu_ptr_<<", data gpu_ptr: "<<data_->gpu_data();
+	}
+}
+
+template<typename Dtype>
+Blob<Dtype>::~Blob() {
+#ifndef CPU_ONLY
+	if (Caffe::mode() == Caffe::GPU && data_cpu_ptr_) {
+//		LOG(INFO)<<"~Blob()...";
+		CUDA_CHECK(cudaFreeHost(data_cpu_ptr_));
+	}
+#endif
 }
 
 INSTANTIATE_CLASS(Blob);

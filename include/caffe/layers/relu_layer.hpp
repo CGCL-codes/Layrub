@@ -25,11 +25,27 @@ class ReLULayer : public NeuronLayer<Dtype> {
    *     the value @f$ \nu @f$ by which negative values are multiplied.
    */
   explicit ReLULayer(const LayerParameter& param)
-      : NeuronLayer<Dtype>(param) {}
+      : NeuronLayer<Dtype>(param), char_bottom_data(), char_data_cpu_ptr_(NULL) {}
 
   virtual inline const char* type() const { return "ReLU"; }
 
+  virtual ~ReLULayer(){
+    if(char_data_cpu_ptr_){
+    	CUDA_CHECK(cudaFreeHost(char_data_cpu_ptr_));
+    }
+    if(char_bottom_data){
+    	char_bottom_data->~SyncedMemory();
+    }
+  }
+
+  void SetCharBottomDataTo(shared_ptr<SyncedMemory> shared);
+  void TransferDataToCPU(const cudaStream_t& stream, int count);
+  void TransferDataToGPU(const cudaStream_t& stream, int count);
+
  protected:
+  shared_ptr<SyncedMemory> char_bottom_data;
+  void* char_data_cpu_ptr_;
+
   /**
    * @param bottom input Blob vector (length 1)
    *   -# @f$ (N \times C \times H \times W) @f$

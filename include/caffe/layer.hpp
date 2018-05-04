@@ -291,6 +291,12 @@ class Layer {
     param_propagate_down_[param_id] = value;
   }
 
+  virtual void TransferDataToCPU(const cudaStream_t& stream, int count){
+	  LOG(INFO)<<"you should implement this function";
+  }
+  virtual void TransferDataToGPU(const cudaStream_t& stream, int count){
+	  LOG(INFO)<<"you should implement this function";
+  }
 
  protected:
   /** The protobuf that stores the layer parameters */

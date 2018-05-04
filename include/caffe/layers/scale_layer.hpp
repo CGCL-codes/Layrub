@@ -38,6 +38,12 @@ class ScaleLayer: public Layer<Dtype> {
   virtual inline int MaxBottomBlobs() const { return 2; }
   virtual inline int ExactNumTopBlobs() const { return 1; }
 
+  void TransferDataToCPU(const cudaStream_t& stream, int count);
+  void TransferDataToGPU(const cudaStream_t& stream, int count);
+  Blob<Dtype>& temp_Blob();
+  Blob<Dtype>& sum_multiplier_Blob();
+  Blob<Dtype>& sum_result_Blob();
+
  protected:
   /**
    * In the below shape specifications, @f$ i @f$ denotes the value of the

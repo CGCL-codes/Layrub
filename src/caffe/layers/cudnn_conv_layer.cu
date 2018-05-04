@@ -86,6 +86,10 @@ void CuDNNConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
               filter_desc_, weight_diff + this->weight_offset_ * g));
       }
 
+      /////////////////////////////////////////////////////////////
+      sync_conv_groups<<<1, 1>>>();
+      /////////////////////////////////////////////////////////////
+
       // Gradient w.r.t. bottom data.
       if (propagate_down[i]) {
         if (weight == NULL) {

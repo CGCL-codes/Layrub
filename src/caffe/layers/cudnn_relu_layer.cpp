@@ -9,6 +9,9 @@ template <typename Dtype>
 void CuDNNReLULayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   ReLULayer<Dtype>::LayerSetUp(bottom, top);
+  if(this->layer_param_.phase() == TRAIN){
+      return;
+  }
   // initialize cuDNN
   CUDNN_CHECK(cudnnCreate(&handle_));
   cudnn::createTensor4dDesc<Dtype>(&bottom_desc_);
@@ -21,6 +24,9 @@ template <typename Dtype>
 void CuDNNReLULayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   ReLULayer<Dtype>::Reshape(bottom, top);
+  if(this->layer_param_.phase() == TRAIN){
+      return;
+  }
   const int N = bottom[0]->num();
   const int K = bottom[0]->channels();
   const int H = bottom[0]->height();

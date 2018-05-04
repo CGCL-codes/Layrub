@@ -51,7 +51,7 @@ void Solver<Dtype>::Init(const SolverParameter& param) {
   }
   // Scaffolding code
   InitTrainNet();
-  InitTestNets();
+//  InitTestNets(); // only train
   if (Caffe::root_solver()) {
     LOG(INFO) << "Solver scaffolding done.";
   }
@@ -190,9 +190,9 @@ void Solver<Dtype>::Step(int iters) {
     net_->ClearParamDiffs();
     if (param_.test_interval() && iter_ % param_.test_interval() == 0
         && (iter_ > 0 || param_.test_initialization())) {
-      if (Caffe::root_solver()) {
+      /*if (Caffe::root_solver()) {
         TestAll();
-      }
+      }*/
       if (requested_early_exit_) {
         // Break out of the while loop because stop was requested while testing.
         break;
@@ -207,7 +207,8 @@ void Solver<Dtype>::Step(int iters) {
     // accumulate the loss and gradient
     Dtype loss = 0;
     for (int i = 0; i < param_.iter_size(); ++i) {
-      loss += net_->ForwardBackward();
+//        loss += net_->ForwardBackward();
+        loss += net_->ForwardBackward(transfer_stream_);
     }
     loss /= param_.iter_size();
     // average the loss across iterations for smoothed reporting
@@ -259,6 +260,7 @@ void Solver<Dtype>::Step(int iters) {
       Snapshot();
     }
     if (SolverAction::STOP == request) {
+  //	  TestAll();
       requested_early_exit_ = true;
       // Break out of training loop.
       break;
@@ -283,6 +285,9 @@ void Solver<Dtype>::Solve(const char* resume_file) {
   // For a network that is trained by the solver, no bottom or top vecs
   // should be given, and we will just provide dummy vecs.
   int start_iter = iter_;
+
+  CUDA_CHECK(cudaStreamCreateWithFlags(&transfer_stream_, cudaStreamNonBlocking));
+
   Step(param_.max_iter() - iter_);
   // If we haven't already, save a snapshot after optimization, unless
   // overridden by setting snapshot_after_train := false
@@ -313,6 +318,8 @@ void Solver<Dtype>::Solve(const char* resume_file) {
     TestAll();
   }
   LOG(INFO) << "Optimization Done.";
+
+  CUDA_CHECK(cudaStreamDestroy(transfer_stream_));
 }
 
 template <typename Dtype>

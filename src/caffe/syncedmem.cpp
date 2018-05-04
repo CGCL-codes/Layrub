@@ -24,16 +24,28 @@ SyncedMemory::SyncedMemory(size_t size)
 }
 
 SyncedMemory::~SyncedMemory() {
+//	LOG(INFO)<<"~SyncedMemory()";
   check_device();
   if (cpu_ptr_ && own_cpu_data_) {
     CaffeFreeHost(cpu_ptr_, cpu_malloc_use_cuda_);
+
+    cpu_ptr_ = NULL;
+    own_cpu_data_ = false;
+
   }
 
 #ifndef CPU_ONLY
   if (gpu_ptr_ && own_gpu_data_) {
     CUDA_CHECK(cudaFree(gpu_ptr_));
+
+    gpu_ptr_ = NULL;
+    own_gpu_data_ = false;
+
   }
 #endif  // CPU_ONLY
+
+  head_ = UNINITIALIZED;
+
 }
 
 inline void SyncedMemory::to_cpu() {
@@ -180,6 +192,30 @@ void SyncedMemory::check_device() {
   }
 #endif
 #endif
+}
+
+void SyncedMemory::resize(const size_t size) {
+	if (size_ >= size)
+		return;
+	size_ = size;
+}
+
+void* SyncedMemory::transfer_to_cpu(const cudaStream_t& stream, const size_t size,
+		void* cpu_ptr) {
+	CHECK(gpu_ptr_);
+	CHECK(head_ == HEAD_AT_GPU) << "head_: " << head_;
+	if (!cpu_ptr) {// if cpu_ptr is NULL, then malloc at host
+		CaffeMallocHost(&cpu_ptr, size, &cpu_malloc_use_cuda_);
+	}
+	CUDA_CHECK(cudaMemcpyAsync(cpu_ptr, gpu_ptr_, size, cudaMemcpyDeviceToHost,stream));
+	return cpu_ptr;
+}
+
+void SyncedMemory::transfer_to_gpu(const cudaStream_t& stream, const size_t size,
+		const void* cpu_ptr) {
+	CHECK(cpu_ptr);
+	CHECK(gpu_ptr_);
+	CUDA_CHECK(cudaMemcpyAsync(gpu_ptr_, cpu_ptr, size, cudaMemcpyHostToDevice,stream));
 }
 
 }  // namespace caffe

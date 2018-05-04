@@ -130,6 +130,9 @@ class Solver {
   float iterations_last_;
 
   DISABLE_COPY_AND_ASSIGN(Solver);
+
+ private:
+   cudaStream_t transfer_stream_;
 };
 
 }  // namespace caffe

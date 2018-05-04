@@ -24,7 +24,8 @@ template <typename Dtype>
 class Blob {
  public:
   Blob()
-       : data_(), diff_(), count_(0), capacity_(0) {}
+       : data_(), diff_(), count_(0), capacity_(0), data_cpu_ptr_(NULL),
+		 reference_ (new int(0)) {}
 
   /// @brief Deprecated; use <code>Blob(const vector<int>& shape)</code>.
   explicit Blob(const int num, const int channels, const int height,
@@ -266,6 +267,33 @@ class Blob {
 
   bool ShapeEquals(const BlobProto& other);
 
+  void SetDiffTo(shared_ptr<SyncedMemory> shared);
+  void SetDataTo(shared_ptr<SyncedMemory> shared);
+  void Offload(const cudaStream_t& stream);
+  void Loadin(const cudaStream_t& stream);
+  ~Blob();
+  inline void increaseRef(){
+	  (*reference_)++;
+  }
+  inline void increaseRef(int ref_num){
+  	  (*reference_) += ref_num;
+    }
+  inline void decreaseRef(){
+	  if((*reference_) == -1){
+//		  LOG(INFO)<<"ref had been equal to -1";
+		  return;
+	  }
+	  (*reference_)--;
+  }
+
+  inline const shared_ptr<int>& ref() const{
+	  return reference_;
+  }
+
+  inline void assign_ref(const int ref){
+	  (*reference_) = ref;
+  }
+
  protected:
   shared_ptr<SyncedMemory> data_;
   shared_ptr<SyncedMemory> diff_;
@@ -273,6 +301,9 @@ class Blob {
   vector<int> shape_;
   int count_;
   int capacity_;
+
+  void* data_cpu_ptr_;
+  shared_ptr<int> reference_;
 
   DISABLE_COPY_AND_ASSIGN(Blob);
 };  // class Blob

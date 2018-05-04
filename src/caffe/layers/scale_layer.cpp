@@ -217,6 +217,22 @@ void ScaleLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   }
 }
 
+template <typename Dtype>
+void ScaleLayer<Dtype>::TransferDataToCPU(const cudaStream_t& stream, int count){
+	CUDA_CHECK(cudaStreamSynchronize(0));//ensure the temp_'s computation completed.
+	temp_.Offload(stream);
+}
+
+template <typename Dtype>
+void ScaleLayer<Dtype>::TransferDataToGPU(const cudaStream_t& stream, int count){
+	temp_.Loadin(stream);
+}
+
+template <typename Dtype>
+Blob<Dtype>& ScaleLayer<Dtype>::temp_Blob(){
+	return temp_;
+}
+
 #ifdef CPU_ONLY
 STUB_GPU(ScaleLayer);
 #endif
