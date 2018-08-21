@@ -15,3 +15,5 @@ Please refer to the installation steps in BVLC Caffe(http://caffe.berkeleyvision
 ### Reference Paper
 > Bo Liu, Wenbin Jiang, Hai Jin, Xuanhua Shi, and Yang Ma. Layrub: Layer-centric GPU memory reuse and data migration in extreme-scale deep learning systems. In Proceedings of ACM SIGPLAN Symposium on Principles and Practice of Parallel Programming, Vienna, Austria, February 24¨C28, 2018 (PPoPP'18 poster paper).
 
+### Support Or Contact
+If you have any questions, please contact Yang Ma (yangm@hust.edu.cn)
