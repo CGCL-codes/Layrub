@@ -10,7 +10,7 @@ Layrub provides a runtime data placement strategy for extreme-scale training. It
 - Layrub on Caffe is user-friendly. The changes on source code are transparent to users. The use of C++ interface is not different from Caffe.
 
 ### Installation
-Please refer to the installation steps in BVLC Caffe(http://caffe.berkeleyvision.org/installation.html)
+Please refer to the installation steps in BVLC Caffe(http://caffe.berkeleyvision.org/installation.html)  
 Note: This version only modified and tested the C++ code.
 
 ### Reference Paper
