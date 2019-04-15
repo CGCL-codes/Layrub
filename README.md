@@ -16,5 +16,7 @@ Note: This version only modified and tested the C++ code.
 ### Reference Paper
 > Bo Liu, Wenbin Jiang, Hai Jin, Xuanhua Shi, and Yang Ma. Layrub: Layer-centric GPU memory reuse and data migration in extreme-scale deep learning systems. In Proceedings of ACM SIGPLAN Symposium on Principles and Practice of Parallel Programming, Vienna, Austria, February 24¨C28, 2018 (PPoPP'18 poster paper).
 
+> Hai Jin, Bo Liu, Wenbin Jiang, Yang Ma, Xuanhua Shi, Bingsheng He, and Shaofeng Zhao. 2018. Layer-centric memory reuse and data migration for extreme-scale deep learning on many-core architectures. ACM Transactions on Architecture and Code Optimization. 15, 3 (2018), 37:1–37:26
+
 ### Support Or Contact
 If you have any questions, please contact Yang Ma (yangm@hust.edu.cn)
